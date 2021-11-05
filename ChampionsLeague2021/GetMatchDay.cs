@@ -281,10 +281,10 @@ namespace ChampionsLeague2021
                     break;
                 }
             }
-            sh.ProtectedRange(43786814, ColumnEnum.L, ColumnEnum.Z, 8, rowCount + 6, 790);
+            sh.ProtectedRange(43786814, $"L8:Z{rowCount + 6}", 790);
             if (rowCount > 65)
             {
-                sh.ProtectedRange(48770365, ColumnEnum.L, ColumnEnum.Z, 8, rowCount + 6 - 66, 791);
+                sh.ProtectedRange(48770365, $"L8:Z{rowCount + 6 - 66}", 791);
             }
         }
 
