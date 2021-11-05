@@ -158,7 +158,7 @@ namespace ChampionsLeague2021
                         if (player.ToString() == "Czerwona")
                         {
                             System.Threading.Thread.Sleep(1010);
-                            sh.DataValidation(SheetGid, startColumLoop, startColumLoop + 1, rownumber, rownumber + 1);
+                           // sh.DataValidation(SheetGid, startColumLoop, startColumLoop + 1, rownumber, rownumber + 1);
                             startColumLoop++;
                             Console.WriteLine(increment++);
                         }

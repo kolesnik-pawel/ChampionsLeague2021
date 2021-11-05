@@ -30,7 +30,7 @@ namespace ChampionsLeague2021
             //sheetsHelper.MargeCellRequest(0, ColumnEnum.C, ColumnEnum.E, 0, 2);
             //sheetsHelper.CellBackgroundCollor(0, ColumnEnum.C, ColumnEnum.D, 1, 3, sheetsHelper.ColorConvert(System.Drawing.ColorTranslator.FromHtml("#aaea9999")));
 
-            sheetsHelper.ConvertToGridRange("Z11:AA20");
+           // sheetsHelper.ConvertToGridRange("Z11:AA20");
             //sheetsHelper.AutoResizeCell(1414534158, ColumnEnum.A, ColumnEnum.Z);
             //sheetsHelper.AutoResizeCell(0, ColumnEnum.A, ColumnEnum.Z);
 
@@ -46,7 +46,11 @@ namespace ChampionsLeague2021
 
             //SheetsHelper sheetsHelper = new SheetsHelper(SpreadsheetId2);
            // sheetsHelper.Write2(SheetsEnum.Dane, "A1", valueRange);
-            sheetsHelper.UpdateCell(SheetsEnum.Dane, "A1", valueRange);
+            //sheetsHelper.UpdateCell(SheetsEnum.Dane, "A1", valueRange);
+            //sheetsHelper.AddNewProtectedRange2(346555606, "A1:C2", 703);
+            //sheetsHelper.ProtectedRange2(346555606, "A1:c10", 703);
+
+          sheetsHelper.MargeCellRequest(346555606, "H1:J5", MergeCellTypesEnum.MERGE_ROWS);
             Matches.UpdateStatus();
 
 

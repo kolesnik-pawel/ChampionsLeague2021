@@ -59,14 +59,8 @@ namespace ChampionsLeague2021
 
         public ValueRange Read(SheetsEnum sheet, string startCell, string endCell)
         {
-            var range = $"{sheet}!{startCell}:{endCell}";
+           return Read(sheet, startCell, endCell, SpreadsheetId);
 
-            var request = service.Spreadsheets.Values.Get(SpreadsheetId, range);
-
-            var response = request.Execute();
-            var values = response.Values;
-
-            return response;
         }
 
         public ValueRange Read(SheetsEnum sheet, string startCell, string endCell, string spreadsheetId)
@@ -154,78 +148,9 @@ namespace ChampionsLeague2021
 
             return conditionValueList;
 
-        }
-        public void DataValidation(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd)
-        {
-            List<Request> body = new List<Request>();
-            Request dataValidation = new Request();
-            GridRange range = new GridRange();
-
-            range.SheetId = sheetId;
-            range.StartColumnIndex = (int?)StartColum;
-            range.EndColumnIndex = (int?)EndColumn;
-            range.StartRowIndex = RowStart;
-            range.EndRowIndex = RowEnd;
-
-            DataValidationRule rule = new DataValidationRule();
-
-            BooleanCondition condition = new BooleanCondition();
-            condition.Type = "ONE_OF_LIST";
-            ConditionValue conditionValue1 = new ConditionValue() { UserEnteredValue = "Tak" };
-            ConditionValue conditionValue2 = new ConditionValue() { UserEnteredValue = "Nie" };
-
-            List<ConditionValue> conditionValueList = new List<ConditionValue>();
-            conditionValueList.Add(conditionValue1);
-            conditionValueList.Add(conditionValue2);
-            condition.Values = conditionValueList;
-
-            rule.Condition = condition;
-
-            SetDataValidationRequest dataValidationRequest = new SetDataValidationRequest();
-
-            dataValidationRequest.Range = range;
-            dataValidationRequest.Rule = rule;
-
-            dataValidation.SetDataValidation = dataValidationRequest;
-
-            BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
-
-            request.Requests = new List<Request>() { dataValidation };
-
-            var set = service.Spreadsheets.BatchUpdate(request, SpreadsheetId2);
-
-            set.Execute();
-        }
-
-        public void UnmargeCellRequest(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd)
-        {
-            BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest()
-            {
-                Requests = new List<Request>()
-                {
-                    new Request()
-                    {
-                        UnmergeCells = new UnmergeCellsRequest()
-                        {
-                            Range = new GridRange()
-                            {
-                                SheetId = sheetId,
-                                StartColumnIndex = (int?)StartColum,
-                                EndColumnIndex = (int?)EndColumn,
-                                StartRowIndex = RowStart,
-                                EndRowIndex = RowEnd
-                            }
-                        }
-                    }
-                }
-            };
-
-            var set = service.Spreadsheets.BatchUpdate(request, SpreadsheetId2);
-
-            set.Execute();
-        }
+        }       
         public void AutoResizeCell(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn)
-        {
+        {            
             BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest()
             {
                 Requests = new List<Request>()
@@ -249,8 +174,40 @@ namespace ChampionsLeague2021
 
             set.Execute();
         }
-        public void MargeCellRequest(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd)
+        public void UnmargeCellRequest(int sheetId, string rangeCells)
         {
+            GridRange range = ConvertToGridRange(rangeCells);
+            range.SheetId = sheetId;
+            BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest()
+            {
+                Requests = new List<Request>()
+                {
+                    new Request()
+                    {
+                        UnmergeCells = new UnmergeCellsRequest()
+                        {
+                            Range = range
+                        }
+                    }
+                }
+            };
+
+            var set = service.Spreadsheets.BatchUpdate(request, SpreadsheetId2);
+
+            set.Execute();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sheetId">GId of google sheets (find at end of url address) </param>
+        /// <param name="rangeCells"></param>
+        /// <param name="mergeType">MERGE_ALL MERGE_COLUMNS MERGE_ROWS</param>
+        public void MargeCellRequest(int sheetId, string rangeCells, MergeCellTypesEnum mergeType)
+        {
+            GridRange range = ConvertToGridRange(rangeCells);
+            range.SheetId = sheetId;
+
             BatchUpdateSpreadsheetRequest requestBody = new BatchUpdateSpreadsheetRequest()
             {
                 Requests = new List<Request>()
@@ -259,15 +216,8 @@ namespace ChampionsLeague2021
                     {
                         MergeCells = new MergeCellsRequest()
                         {
-                            MergeType = "MERGE_ROWS",
-                            Range = new GridRange()
-                            {
-                                SheetId = sheetId,
-                                StartColumnIndex = (int?)StartColum,
-                                EndColumnIndex = (int?)EndColumn,
-                                StartRowIndex = RowStart,
-                                EndRowIndex = RowEnd
-                            }
+                            MergeType = mergeType.ToString(),
+                            Range = range
                         }                        
                                                     
                     }
@@ -278,8 +228,11 @@ namespace ChampionsLeague2021
 
             set.Execute();
         }
-        public void CellBackgroundCollor(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd, Color bacgroundColor)
+        public void CellBackgroundCollor(int sheetId, string rangeCells, Color bacgroundColor)
         {
+            GridRange range = ConvertToGridRange(rangeCells);
+            range.SheetId = sheetId;
+
             BatchUpdateSpreadsheetRequest requestBody = new BatchUpdateSpreadsheetRequest()
             {
                 Requests = new List<Request>()
@@ -288,14 +241,7 @@ namespace ChampionsLeague2021
                     {
                         RepeatCell = new RepeatCellRequest()
                         {
-                            Range = new GridRange()
-                            {
-                                SheetId = sheetId,
-                                StartColumnIndex = (int?)StartColum,
-                                EndColumnIndex = (int?)EndColumn,
-                                StartRowIndex = RowStart,
-                                EndRowIndex = RowEnd
-                            },
+                            Range = range,
                             Cell = new CellData()
                             {
                                 UserEnteredFormat = new CellFormat()
@@ -315,16 +261,11 @@ namespace ChampionsLeague2021
             set.Execute();
         }
 
-        public void BorderCell(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd)
+        public void BorderCell(int sheetId, string rangeCells, int RowEnd)
         {
             Request borderCellRequest = new Request();
-            GridRange gridRange = new GridRange();
-            
+            GridRange gridRange = ConvertToGridRange(rangeCells);
             gridRange.SheetId = sheetId;
-            gridRange.StartColumnIndex = (int?)StartColum;
-            gridRange.EndColumnIndex = (int?)EndColumn;
-            gridRange.StartRowIndex = RowStart;
-            gridRange.EndRowIndex = RowEnd;
 
             BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest()
             {
@@ -354,55 +295,13 @@ namespace ChampionsLeague2021
 
             set.Execute();
         }
-        public void DataValidation(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd, List<ConditionValue> conditionValueList)
-        {
-           // List<Request> body = new List<Request>();
-            Request dataValidation = new Request();
-            GridRange range = new GridRange();
-
-            range.SheetId = sheetId;
-            range.StartColumnIndex = (int?)StartColum;
-            range.EndColumnIndex = (int?)EndColumn;
-            range.StartRowIndex = RowStart;
-            range.EndRowIndex = RowEnd;
-
-            DataValidationRule rule = new DataValidationRule();
-
-            BooleanCondition condition = new BooleanCondition();
-            condition.Type = "ONE_OF_LIST";
-
-            condition.Values = conditionValueList;
-
-            rule.Condition = condition;
-
-            SetDataValidationRequest dataValidationRequest = new SetDataValidationRequest();
-
-            dataValidationRequest.Range = range;
-            dataValidationRequest.Rule = rule;
-
-            dataValidation.SetDataValidation = dataValidationRequest;
-
-            BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
-
-            request.Requests = new List<Request>() { dataValidation };
-
-            var set = service.Spreadsheets.BatchUpdate(request, SpreadsheetId);
-
-            set.Execute();
-
-
-        }
-        public void DataValidation2(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd, List<ConditionValue> conditionValueList)
+        public void DataValidation(int sheetId, string rangeCells, List<ConditionValue> conditionValueList)
         {
             // List<Request> body = new List<Request>();
-            Request dataValidation = new Request();
-            GridRange range = new GridRange();
+
+            GridRange range = ConvertToGridRange(rangeCells);
 
             range.SheetId = sheetId;
-            range.StartColumnIndex = (int?)StartColum;
-            range.EndColumnIndex = (int?)EndColumn;
-            range.StartRowIndex = RowStart;
-            range.EndRowIndex = RowEnd;
 
             BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest()
             {
@@ -430,68 +329,12 @@ namespace ChampionsLeague2021
 
             set.Execute();
 
-
         }
-        public void ProtectedRange(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd, int ProtectedRangeId)
+        public void ProtectedRange(int sheetId, string rangeCells, int ProtectedRangeId)
         {
-            //var tmp = service.Spreadsheets.Values.Get(SpreadsheetId, "A1:Z20").Service.;
-            List<Request> body = new List<Request>();
-            Request dataProtected = new Request();
-            GridRange range = new GridRange();
-            ProtectedRange protectedRange = new ProtectedRange();
-            protectedRange.ProtectedRangeId = ProtectedRangeId;
+            GridRange range = ConvertToGridRange(rangeCells);
 
             range.SheetId = sheetId;
-            range.StartColumnIndex = (int?)StartColum;
-            range.EndColumnIndex = (int?)EndColumn;
-            range.StartRowIndex = RowStart;
-            range.EndRowIndex = RowEnd;
-
-            protectedRange.Range = range;
-
-            // protectedRange.NamedRangeId = "Nie ma obstawiania";
-
-            Editors usersCanEdit = new Editors();
-            usersCanEdit.Users = new List<string>();
-            usersCanEdit.Users.Add("sancho0510@gmail.com");
-            usersCanEdit.Users.Add("sheets@fluid-isotope-311615.iam.gserviceaccount.com");
-            protectedRange.Editors = usersCanEdit;
-
-            // dataProtected.AddProtectedRange =  new AddProtectedRangeRequest();
-            // dataProtected.AddProtectedRange.ProtectedRange = protectedRange;
-
-            dataProtected.UpdateProtectedRange = new UpdateProtectedRangeRequest();
-            dataProtected.UpdateProtectedRange.ProtectedRange = protectedRange;
-            dataProtected.UpdateProtectedRange.Fields = "*";
-
-            BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
-
-            request.Requests = new List<Request>() { dataProtected };
-            //request.Requests[0].
-
-            var set = service.Spreadsheets.BatchUpdate(request, SpreadsheetId);
-            //service.Spreadsheets.Get();
-
-            set.Execute();
-
-        }
-
-        public void ProtectedRange2(int sheetId, ColumnEnum StartColum, ColumnEnum EndColumn, int RowStart, int RowEnd, int ProtectedRangeId)
-        {
-            //var tmp = service.Spreadsheets.Values.Get(SpreadsheetId, "A1:Z20").Service.;
-            List<Request> body = new List<Request>();
-            Request dataProtected = new Request();
-            GridRange range = new GridRange();
-            ProtectedRange protectedRange = new ProtectedRange();
-            protectedRange.ProtectedRangeId = ProtectedRangeId;
-
-            range.SheetId = sheetId;
-            range.StartColumnIndex = (int?)StartColum;
-            range.EndColumnIndex = (int?)EndColumn;
-            range.StartRowIndex = RowStart;
-            range.EndRowIndex = RowEnd;
-
-            protectedRange.Range = range;
 
             BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest()
             {
@@ -499,6 +342,7 @@ namespace ChampionsLeague2021
                 {
                     new Request()
                     {
+                       
                         UpdateProtectedRange = new UpdateProtectedRangeRequest()
                         {
                             ProtectedRange = new ProtectedRange()
@@ -507,11 +351,14 @@ namespace ChampionsLeague2021
                                 {
                                     Users = new List<string>()
                                     {
-                                        "sancho0510@gmail.com",
-                                        "sheets@fluid-isotope-311615.iam.gserviceaccount.com"
+                                        ConfigurationManager.AppSettings.Get("GoogleSheetsEmailAddress"),
+                                        ConfigurationManager.AppSettings.Get("SheetsOwnerEmailAddress")
                                     }
                                 },
-                               ProtectedRangeId = ProtectedRangeId
+                               ProtectedRangeId = ProtectedRangeId,
+                               Range = range,
+                               RequestingUserCanEdit = true,
+                               Description = "test"                             
                             },
                             Fields = "*"
                         }
@@ -519,32 +366,50 @@ namespace ChampionsLeague2021
                 }
             };
 
-            // protectedRange.NamedRangeId = "Nie ma obstawiania";
-
-            Editors usersCanEdit = new Editors();
-            usersCanEdit.Users = new List<string>();
-            usersCanEdit.Users.Add("sancho0510@gmail.com");
-            usersCanEdit.Users.Add("sheets@fluid-isotope-311615.iam.gserviceaccount.com");
-            protectedRange.Editors = usersCanEdit;
-
-            // dataProtected.AddProtectedRange =  new AddProtectedRangeRequest();
-            // dataProtected.AddProtectedRange.ProtectedRange = protectedRange;
-
-            dataProtected.UpdateProtectedRange = new UpdateProtectedRangeRequest();
-            dataProtected.UpdateProtectedRange.ProtectedRange = protectedRange;
-            dataProtected.UpdateProtectedRange.Fields = "*";
-
-           // BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
-
-            request.Requests = new List<Request>() { dataProtected };
-            //request.Requests[0].
-
-
             var set = service.Spreadsheets.BatchUpdate(request, SpreadsheetId);
+            var s = service.Spreadsheets.Sheets;
             //service.Spreadsheets.Get();
 
             set.Execute();
+        }
+        public void AddNewProtectedRange(int sheetId, string rangeCells, int ProtectedRangeId)
+        {
+            GridRange range = ConvertToGridRange(rangeCells);
 
+            range.SheetId = sheetId;
+
+            BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest()
+            {
+                Requests = new List<Request>()
+                {
+                    new Request()
+                    {
+
+                        AddProtectedRange = new AddProtectedRangeRequest()
+                        {
+                            ProtectedRange = new ProtectedRange()
+                            {
+                                Editors = new Editors()
+                                {
+                                    Users = new List<string>()
+                                    {
+                                        ConfigurationManager.AppSettings.Get("GoogleSheetsEmailAddress"),
+                                        ConfigurationManager.AppSettings.Get("SheetsOwnerEmailAddress")
+                                    }
+                                },
+                               ProtectedRangeId = ProtectedRangeId,
+                               Range = range,
+                               RequestingUserCanEdit = true,
+                               Description = "test1",
+                            }
+                        }
+                    }
+                }
+            };
+
+            var set = service.Spreadsheets.BatchUpdate(request, SpreadsheetId);
+
+            set.Execute();
         }
         public void SetDataValidationPost()
         {
@@ -598,8 +463,8 @@ namespace ChampionsLeague2021
             }
 
             gridRange.StartColumnIndex = ConwertColumnStringAddressToIntIndex(listColumn[0]);
-            gridRange.StartRowIndex = int.Parse(listRow[0]);
-            gridRange.EndColumnIndex = ConwertColumnStringAddressToIntIndex(listColumn[1]);
+            gridRange.StartRowIndex = int.Parse(listRow[0])-1;
+            gridRange.EndColumnIndex = ConwertColumnStringAddressToIntIndex(listColumn[1])+1;
             gridRange.EndRowIndex = int.Parse(listRow[1]);
 
             return gridRange;
@@ -610,13 +475,13 @@ namespace ChampionsLeague2021
             if (string.IsNullOrEmpty(address))
                 throw new System.ArgumentNullException("address");
 
-            address.ToUpper();
+           address = address.ToUpper();
             int sum = 0;
 
             for (int i = 0; i < address.Length; i++)
             {
                 sum *= 26;
-                sum += (address[i] - 'A' + 1);
+                sum += (address[i] - 'A' );
             }
 
             return sum;
